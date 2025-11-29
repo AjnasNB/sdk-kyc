@@ -1,0 +1,34 @@
+{
+  "name": "aptos-kyc-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Complete Aptos KYC/Identity SDK System",
+  "workspaces": [
+    "backend",
+    "sdk",
+    "example-dapp",
+    "docs"
+  ],
+  "scripts": {
+    "install:all": "npm install --workspaces",
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "dev:backend": "npm run dev --workspace=backend",
+    "dev:dapp": "npm run dev --workspace=example-dapp",
+    "dev:docs": "npm run start --workspace=docs",
+    "clean": "npm run clean --workspaces --if-present && rm -rf node_modules"
+  },
+  "keywords": [
+    "aptos",
+    "kyc",
+    "identity",
+    "blockchain",
+    "zk-proofs"
+  ],
+  "author": "Cognifyr",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}

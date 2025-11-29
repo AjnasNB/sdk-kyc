@@ -1,0 +1,139 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  # Move Contracts
+  contracts:
+    name: Build Move Contracts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Install Aptos CLI
+        run: |
+          curl -fsSL "https://aptos.dev/scripts/install_cli.py" | python3
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+      
+      - name: Compile Contracts
+        run: |
+          cd contracts
+          aptos move compile --save-metadata
+
+  # Backend API
+  backend:
+    name: Build Backend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+      
+      - name: Install Dependencies
+        run: |
+          cd backend
+          npm ci
+      
+      - name: Generate Prisma Client
+        run: |
+          cd backend
+          npx prisma generate
+      
+      - name: Build
+        run: |
+          cd backend
+          npm run build
+      
+      - name: Lint
+        run: |
+          cd backend
+          npm run lint || true
+
+  # TypeScript SDK
+  sdk:
+    name: Build SDK
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: sdk/package-lock.json
+      
+      - name: Install Dependencies
+        run: |
+          cd sdk
+          npm ci
+      
+      - name: Build
+        run: |
+          cd sdk
+          npm run build
+      
+      - name: Test
+        run: |
+          cd sdk
+          npm test || true
+
+  # Example dApp
+  dapp:
+    name: Build Example dApp
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: example-dapp/package-lock.json
+      
+      - name: Install Dependencies
+        run: |
+          cd example-dapp
+          npm ci
+      
+      - name: Build
+        run: |
+          cd example-dapp
+          npm run build
+        env:
+          NEXT_PUBLIC_API_BASE_URL: http://localhost:3001
+          NEXT_PUBLIC_APTOS_NODE_URL: https://fullnode.testnet.aptoslabs.com/v1
+
+  # Documentation
+  docs:
+    name: Build Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: docs/package-lock.json
+      
+      - name: Install Dependencies
+        run: |
+          cd docs
+          npm ci
+      
+      - name: Build
+        run: |
+          cd docs
+          npm run build

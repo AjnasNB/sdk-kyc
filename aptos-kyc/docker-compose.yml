@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  # Aptos Local Validator Node
+  aptos-validator:
+    image: aptoslabs/validator:devnet
+    container_name: aptos-kyc-validator
+    ports:
+      - "8080:8080"   # REST API
+      - "9101:9101"   # Metrics
+      - "6180:6180"   # Node API
+    environment:
+      - RUST_LOG=info
+    volumes:
+      - aptos-data:/opt/aptos/data
+    networks:
+      - aptos-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/v1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # MongoDB (if you want to run locally instead of Atlas)
+  # mongodb:
+  #   image: mongo:7
+  #   container_name: aptos-kyc-mongodb
+  #   ports:
+  #     - "27017:27017"
+  #   environment:
+  #     MONGO_INITDB_ROOT_USERNAME: admin
+  #     MONGO_INITDB_ROOT_PASSWORD: password123
+  #     MONGO_INITDB_DATABASE: aptoskyc
+  #   volumes:
+  #     - mongodb-data:/data/db
+  #   networks:
+  #     - aptos-network
+  #   restart: unless-stopped
+
+volumes:
+  aptos-data:
+    driver: local
+  # mongodb-data:
+  #   driver: local
+
+networks:
+  aptos-network:
+    driver: bridge

@@ -1,0 +1,46 @@
+{
+    "name": "@cognifyr/aptos-kyc-sdk",
+    "version": "1.0.0",
+    "description": "TypeScript SDK for Aptos KYC/Identity system",
+    "main": "dist/index.js",
+    "module": "dist/index.mjs",
+    "types": "dist/index.d.ts",
+    "exports": {
+        ".": {
+            "require": "./dist/index.js",
+            "import": "./dist/index.mjs",
+            "types": "./dist/index.d.ts"
+        }
+    },
+    "scripts": {
+        "build": "tsup src/index.ts --format cjs --dts --clean",
+        "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+        "test": "jest",
+        "clean": "rm -rf dist node_modules"
+    },
+    "keywords": [
+        "aptos",
+        "kyc",
+        "identity",
+        "blockchain",
+        "sdk",
+        "typescript"
+    ],
+    "author": "Cognifyr",
+    "license": "MIT",
+    "dependencies": {
+        "aptos": "^1.12.0"
+    },
+    "devDependencies": {
+        "@types/node": "^20.10.5",
+        "tsup": "^8.5.1",
+        "typescript": "^5.3.3"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/cognifyr/aptos-kyc"
+    },
+    "files": [
+        "dist"
+    ]
+}

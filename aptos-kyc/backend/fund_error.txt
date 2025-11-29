@@ -1,0 +1,12 @@
+Funding account: 0x0938bd5a2fabaac81a6bbbbcb5b0611691d2b217c5c446f5ed45d4111f07c06e
+Funding failed: Error: There is no way to programmatically mint testnet APT, you must use the minting site at https://aptos.dev/network/faucet
+    at si.negY [as getRequestUrl] (D:\sdk kyc\aptos-kyc\node_modules\@aptos-labs\ts-sdk\src\transactions\transactionBuilder\remoteAbi.ts:164:70)
+    at negY (D:\sdk kyc\aptos-kyc\node_modules\@aptos-labs\ts-sdk\src\core\crypto\keyless.ts:788:24)
+    at Ps (D:\sdk kyc\aptos-kyc\node_modules\@aptos-labs\ts-sdk\src\core\crypto\keyless.ts:788:24)
+    at hc (D:\sdk kyc\aptos-kyc\node_modules\@aptos-labs\ts-sdk\src\transactions\transactionBuilder\remoteAbi.ts:164:70)
+    at er.fundAccount (D:\sdk kyc\aptos-kyc\node_modules\@aptos-labs\ts-sdk\src\transactions\transactionBuilder\remoteAbi.ts:164:70)
+    at re.value (D:\sdk kyc\aptos-kyc\node_modules\@aptos-labs\ts-sdk\src\transactions\transactionBuilder\remoteAbi.ts:164:70)
+    at fund (D:\sdk kyc\aptos-kyc\backend\src\scripts\fund.ts:11:33)
+    at Object.<anonymous> (D:\sdk kyc\aptos-kyc\backend\src\scripts\fund.ts:26:1)
+    at Module._compile (node:internal/modules/cjs/loader:1730:14)
+    at Module.m._compile (D:\sdk kyc\aptos-kyc\node_modules\ts-node\src\index.ts:1618:23)

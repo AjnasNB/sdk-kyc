@@ -1,0 +1,58 @@
+// This is your Prisma schema file
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SessionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+model Session {
+  id              String        @id @default(uuid())
+  walletAddress   String        @map("wallet_address")
+  email           String?
+  phone           String?
+  emailVerified   Boolean       @default(false) @map("email_verified")
+  phoneVerified   Boolean       @default(false) @map("phone_verified")
+  idVerified      Boolean       @default(false) @map("id_verified")
+  idHash          String?       @map("id_hash")
+  status          SessionStatus @default(PENDING)
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  @@map("sessions")
+}
+
+model Identity {
+  id              String   @id @default(uuid())
+  walletAddress   String   @unique @map("wallet_address")
+  kycLevel        Int      @map("kyc_level")
+  credentialHash  String   @map("credential_hash")
+  verified        Boolean  @default(true)
+  lastTxHash      String?  @map("last_tx_hash")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("identities")
+}
+
+model ApiKey {
+  id                  String   @id @default(uuid())
+  key                 String   @unique
+  label               String
+  active              Boolean  @default(true)
+  rateLimitPerMinute  Int      @default(100) @map("rate_limit_per_minute")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  @@map("api_keys")
+}

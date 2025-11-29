@@ -1,0 +1,21 @@
+Compiling, may take a little while to download git dependencies...
+INCLUDING DEPENDENCY AptosFramework
+INCLUDING DEPENDENCY AptosStdlib
+INCLUDING DEPENDENCY AptosToken
+INCLUDING DEPENDENCY MoveStdlib
+BUILDING AptosKYC
+[0m[1m[38;5;9merror[0m[1m: cannot pass `&address` to a function which expects argument of type `&signer`[0m
+    [0m[36m┌─[0m D:\sdk kyc\aptos-kyc\contracts\sources\IdentityNFT.move:141:40
+    [0m[36m│[0m
+[0m[36m141[0m [0m[36m│[0m         token::direct_transfer(issuer, [0m[31m&user[0m, token_id, 1);
+    [0m[36m│[0m                                        [0m[31m^^^^^[0m
+
+[0m[1m[38;5;11mwarning[0m[1m: unused alias[0m
+  [0m[36m┌─[0m D:\sdk kyc\aptos-kyc\contracts\sources\KYCConfig.move:4:26
+  [0m[36m│[0m
+[0m[36m4[0m [0m[36m│[0m     use aptos_framework::[0m[33maccount[0m;
+  [0m[36m│[0m                          [0m[33m^^^^^^^[0m [0m[33mUnused 'use' of alias 'account'. Consider removing it[0m
+
+{
+  "Error": "Move compilation failed: exiting with context checking errors"
+}

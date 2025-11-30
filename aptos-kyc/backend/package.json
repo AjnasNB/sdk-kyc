@@ -13,6 +13,8 @@
         "clean": "rm -rf dist node_modules"
     },
     "dependencies": {
+        "@azure/cognitiveservices-face": "^5.0.0",
+        "@azure/ms-rest-js": "^2.7.0",
         "aptos": "^1.12.0",
         "bcrypt": "^5.1.1",
         "cors": "^2.8.5",

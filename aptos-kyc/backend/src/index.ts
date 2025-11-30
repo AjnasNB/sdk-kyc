@@ -52,6 +52,30 @@ app.use(`${API_PREFIX}/status`, statusRoutes);
 // 404 handler
 app.use(notFoundHandler);
 
+import * as superController from './controllers/superController';
+
+// ... existing routes ...
+
+// Super-SDK Routes
+// DID
+app.post('/api/v1/did/issue', superController.issueCredential);
+app.get('/api/v1/did/:wallet', superController.getCredentials);
+
+// Reputation
+app.get('/api/v1/repute/:wallet', superController.getReputation);
+app.post('/api/v1/repute/calculate', superController.calculateScore);
+
+// FraudGuard
+app.get('/api/v1/fraud/:wallet', superController.checkRisk);
+app.post('/api/v1/fraud/analyze', superController.analyzeWallet);
+
+import * as adminController from './controllers/adminController';
+
+// ... existing routes ...
+
+// Admin Routes
+app.get('/api/v1/admin/dashboard', adminController.getDashboardStats);
+
 // Error handling middleware (must be last)
 app.use(errorHandler);
 
@@ -77,34 +101,18 @@ async function startServer() {
             console.log('');
             console.log('Available endpoints:');
             console.log(`  GET  /health`);
-            console.log(`  POST ${API_PREFIX}/session/start`);
-            console.log(`  GET  ${API_PREFIX}/session/:sessionId`);
-            console.log(`  POST ${API_PREFIX}/verify/email`);
-            console.log(`  POST ${API_PREFIX}/verify/phone`);
-            console.log(`  POST ${API_PREFIX}/verify/id`);
-            console.log(`  POST ${API_PREFIX}/kyc/complete`);
-            console.log(`  POST ${API_PREFIX}/kyc/mint-nft`);
-            console.log(`  GET  ${API_PREFIX}/status/:wallet`);
-            console.log('');
+        });
+
+        process.on('SIGINT', async () => {
+            console.log('\nSIGINT received, shutting down gracefully...');
+            await db.disconnect();
+            process.exit(0);
         });
     } catch (error) {
         console.error('❌ Failed to start server:', error);
         process.exit(1);
     }
 }
-
-// Handle graceful shutdown
-process.on('SIGTERM', async () => {
-    console.log('SIGTERM received, shutting down gracefully...');
-    await db.disconnect();
-    process.exit(0);
-});
-
-process.on('SIGINT', async () => {
-    console.log('\nSIGINT received, shutting down gracefully...');
-    await db.disconnect();
-    process.exit(0);
-});
 
 // Start the server
 startServer();

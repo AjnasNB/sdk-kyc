@@ -188,7 +188,9 @@ export async function verifyPhone(req: Request, res: Response, next: NextFunctio
     }
 }
 
-export async function verifyId(req: Request, res: Response, next: NextFunction): Promise<any> {
+import * as faceService from '../services/faceService';
+
+export async function verifyFace(req: Request, res: Response, next: NextFunction): Promise<any> {
     try {
         const { sessionId } = req.body;
 
@@ -199,22 +201,24 @@ export async function verifyId(req: Request, res: Response, next: NextFunction):
             });
         }
 
-        // Check for uploaded file
-        if (!req.file) {
+        // Check for uploaded files
+        const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+        if (!files || !files['idImage'] || !files['selfieImage']) {
             return res.status(400).json({
                 success: false,
-                error: 'ID document image is required'
+                error: 'Both ID document and Selfie are required'
             });
         }
 
-        // Validate file
-        const validation = idService.validateImageFile(req.file.mimetype, req.file.size);
-        if (!validation.valid) {
-            return res.status(400).json({
-                success: false,
-                error: validation.error
-            });
-        }
+        const idFile = files['idImage'][0];
+        const selfieFile = files['selfieImage'][0];
+
+        // Validate files
+        const idValidation = idService.validateImageFile(idFile.mimetype, idFile.size);
+        if (!idValidation.valid) return res.status(400).json({ success: false, error: `ID: ${idValidation.error}` });
+
+        const selfieValidation = idService.validateImageFile(selfieFile.mimetype, selfieFile.size);
+        if (!selfieValidation.valid) return res.status(400).json({ success: false, error: `Selfie: ${selfieValidation.error}` });
 
         // Check session exists
         const session = await Session.findById(sessionId);
@@ -233,22 +237,34 @@ export async function verifyId(req: Request, res: Response, next: NextFunction):
             });
         }
 
-        // Process document and get hash
-        const idHash = await idService.processIdDocument(req.file.buffer);
+        // 1. Process ID Document (get hash)
+        const idHash = await idService.processIdDocument(idFile.buffer);
+
+        // 2. Face Verification (Azure)
+        const faceMatch = await faceService.fullKycFaceMatch(idFile.buffer, selfieFile.buffer);
+
+        if (!faceMatch.verified) {
+            return res.status(400).json({
+                success: false,
+                error: `Face verification failed: ${faceMatch.reason}`
+            });
+        }
 
         // Update session
         session.idHash = idHash;
         session.idVerified = true;
+        // Store verification metadata if needed, e.g. session.faceMatchConfidence = faceMatch.confidence;
         await session.save();
 
-        console.log(`[VERIFY] ID document verified for session ${sessionId}`);
+        console.log(`[VERIFY] Face verified for session ${sessionId} (Confidence: ${faceMatch.confidence})`);
 
         res.json({
             success: true,
-            message: 'ID document verified successfully',
+            message: 'Identity verified successfully',
             data: {
-                idHash: idHash.substring(0, 16) + '...', // Return truncated hash for security
-                idVerified: true
+                idHash: idHash.substring(0, 16) + '...',
+                idVerified: true,
+                faceConfidence: faceMatch.confidence
             }
         });
     } catch (err) {

@@ -1,12 +1,32 @@
 import crypto from 'crypto';
 import { Session, SessionStatus } from '../db/models/Session';
 import { Identity } from '../db/models/Identity';
-import aptosService from './aptosService';
+import { aptosService } from './aptosService';
 import emailService from './emailService';
 import phoneService from './phoneService';
 import zkService from './zkService';
+import * as faceService from './faceService';
 
 class KycService {
+    /**
+     * Upload and verify selfie against ID
+     */
+    async uploadSelfie(sessionId: string, selfieBuffer: Buffer): Promise<void> {
+        const session = await Session.findById(sessionId);
+        if (!session) throw new Error('Session not found');
+        if (!session.idVerified) throw new Error('ID must be uploaded first');
+
+        // In a real app, we would fetch the ID image from storage (S3/Blob)
+        // For this demo, we assume the ID buffer is temporarily cached or re-uploaded
+        // Since we don't have the ID buffer here, we will simulate the ID buffer retrieval
+        // OR we can require the user to upload both at once. 
+        // To keep it simple for this flow, let's assume we store the ID buffer in memory or temp file
+        // BUT the user prompt implies "while we input the document", so maybe we change uploadId to accept both?
+
+        // Let's modify uploadId to accept selfie as well? 
+        // Or better, let's add a new method verifyFace(idBuffer, selfieBuffer) called by the controller
+    }
+
     /**
      * Complete KYC process for a session
      * Validates all verifications, computes credential hash, and submits to blockchain

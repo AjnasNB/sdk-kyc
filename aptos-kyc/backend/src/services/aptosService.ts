@@ -1,6 +1,14 @@
 import { AptosClient, AptosAccount, HexString } from 'aptos';
 import { config } from '../config';
 
+export interface IdentityFromChain {
+    wallet: string;
+    kycLevel: number;
+    credentialHash: number[] | string;
+    verified: boolean;
+    version: number;
+}
+
 class AptosService {
     private client: AptosClient;
     private issuerAccount: AptosAccount;
@@ -37,6 +45,15 @@ class AptosService {
         console.log(`✅ Aptos account: ${this.issuerAccount.address().hex()}`);
     }
 
+    // Helper to submit transaction
+    private async submitTransaction(payload: any): Promise<string> {
+        const rawTxn = await this.client.generateTransaction(this.issuerAccount.address(), payload);
+        const signedTxn = await this.client.signTransaction(this.issuerAccount, rawTxn);
+        const result = await this.client.submitTransaction(signedTxn);
+        await this.client.waitForTransaction(result.hash);
+        return result.hash;
+    }
+
     async submitKycTx(userAddress: string, kycLevel: number, credentialHashHex: string): Promise<string> {
         if (process.env.ENABLE_MOCK_CHAIN === 'true') {
             console.log(`[MOCK] Submitting KYC for ${userAddress} (Level ${kycLevel})`);
@@ -52,12 +69,7 @@ class AptosService {
                 arguments: [config.aptosRegistryAddress, userAddress, kycLevel, Array.from(hashBytes)],
             };
 
-            const rawTxn = await this.client.generateTransaction(this.issuerAccount.address(), payload);
-            const signedTxn = await this.client.signTransaction(this.issuerAccount, rawTxn);
-            const result = await this.client.submitTransaction(signedTxn);
-            await this.client.waitForTransaction(result.hash);
-
-            return result.hash;
+            return await this.submitTransaction(payload);
         } catch (error) {
             console.error('KYC submit error:', error);
             throw new Error(`Failed to submit KYC: ${error}`);
@@ -72,12 +84,7 @@ class AptosService {
                 arguments: [config.aptosRegistryAddress, userAddress],
             };
 
-            const rawTxn = await this.client.generateTransaction(this.issuerAccount.address(), payload);
-            const signedTxn = await this.client.signTransaction(this.issuerAccount, rawTxn);
-            const result = await this.client.submitTransaction(signedTxn);
-            await this.client.waitForTransaction(result.hash);
-
-            return result.hash;
+            return await this.submitTransaction(payload);
         } catch (error) {
             console.error('KYC revoke error:', error);
             throw new Error(`Failed to revoke KYC: ${error}`);
@@ -147,12 +154,7 @@ class AptosService {
                 arguments: [config.aptosNftAddress, userAddress],
             };
 
-            const rawTxn = await this.client.generateTransaction(this.issuerAccount.address(), payload);
-            const signedTxn = await this.client.signTransaction(this.issuerAccount, rawTxn);
-            const result = await this.client.submitTransaction(signedTxn);
-            await this.client.waitForTransaction(result.hash);
-
-            return result.hash;
+            return await this.submitTransaction(payload);
         } catch (error) {
             console.error('NFT mint error:', error);
             throw new Error(`Failed to mint NFT: ${error}`);
@@ -162,14 +164,100 @@ class AptosService {
     getIssuerAddress(): string {
         return this.issuerAccount.address().hex();
     }
+
+    // --- DID Module ---
+    async issueCredential(holder: string, id: string, type: string, expiration: number, dataHash: string): Promise<string> {
+        const payload = {
+            function: `${config.aptosModuleAddress}::CredentialRegistry::issue_credential`,
+            type_arguments: [],
+            arguments: [
+                config.aptosRegistryAddress,
+                holder,
+                id,
+                type,
+                expiration.toString(),
+                HexString.ensure(dataHash).toUint8Array()
+            ]
+        };
+        return this.submitTransaction(payload);
+    }
+
+    async getCredentials(holder: string): Promise<any[]> {
+        try {
+            const result = await this.client.view({
+                function: `${config.aptosModuleAddress}::CredentialRegistry::get_credentials`,
+                type_arguments: [],
+                arguments: [config.aptosRegistryAddress, holder]
+            });
+            return result[0] as any[];
+        } catch (error) {
+            console.error("Error fetching credentials:", error);
+            return [];
+        }
+    }
+
+    // --- Reputation Module ---
+    async updateTrustScore(user: string, score: number): Promise<string> {
+        const payload = {
+            function: `${config.aptosModuleAddress}::ReputationStore::update_score`,
+            type_arguments: [],
+            arguments: [
+                config.aptosRegistryAddress, // Using registry address as store address for simplicity
+                user,
+                score.toString()
+            ]
+        };
+        return this.submitTransaction(payload);
+    }
+
+    async getTrustScore(user: string): Promise<number> {
+        try {
+            const result = await this.client.view({
+                function: `${config.aptosModuleAddress}::ReputationStore::get_score`,
+                type_arguments: [],
+                arguments: [config.aptosRegistryAddress, user]
+            });
+            return Number(result[0]);
+        } catch (error) {
+            return 0;
+        }
+    }
+
+    // --- FraudGuard Module ---
+    async updateRiskScore(user: string, riskScore: number, isBlacklisted: boolean): Promise<string> {
+        const payload = {
+            function: `${config.aptosModuleAddress}::FraudGuard::update_risk`,
+            type_arguments: [],
+            arguments: [
+                config.aptosRegistryAddress,
+                user,
+                riskScore,
+                isBlacklisted
+            ]
+        };
+        return this.submitTransaction(payload);
+    }
+
+    async getRiskScore(user: string): Promise<{ score: number, isBlacklisted: boolean }> {
+        try {
+            const scoreRes = await this.client.view({
+                function: `${config.aptosModuleAddress}::FraudGuard::get_risk_score`,
+                type_arguments: [],
+                arguments: [config.aptosRegistryAddress, user]
+            });
+            const blacklistRes = await this.client.view({
+                function: `${config.aptosModuleAddress}::FraudGuard::is_blacklisted`,
+                type_arguments: [],
+                arguments: [config.aptosRegistryAddress, user]
+            });
+            return {
+                score: Number(scoreRes[0]),
+                isBlacklisted: Boolean(blacklistRes[0])
+            };
+        } catch (error) {
+            return { score: 0, isBlacklisted: false };
+        }
+    }
 }
 
-export interface IdentityFromChain {
-    wallet: string;
-    kycLevel: number;
-    credentialHash: number[] | string;
-    verified: boolean;
-    version: number;
-}
-
-export default new AptosService();
+export const aptosService = new AptosService();

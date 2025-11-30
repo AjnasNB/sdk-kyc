@@ -26,3 +26,10 @@ export {
     ServerError,
     BlockchainError
 } from './errors';
+
+// Export Modules
+export { AccessControl } from './modules/AccessControl';
+export { Compliance } from './modules/Compliance';
+export { Credentials } from './modules/Credentials';
+export { FraudGuard } from './modules/FraudGuard';
+export { Reputation } from './modules/Reputation';

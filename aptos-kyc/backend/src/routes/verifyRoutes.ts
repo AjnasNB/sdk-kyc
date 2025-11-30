@@ -25,9 +25,12 @@ router.post('/email', verifyController.verifyEmail);
 router.post('/phone', verifyController.verifyPhone);
 
 /**
- * POST /api/v1/verify/id
- * Upload and verify ID document
+ * POST /api/v1/verify/face
+ * Upload and verify ID document and Selfie
  */
-router.post('/id', upload.single('idImage'), verifyController.verifyId);
+router.post('/face', upload.fields([
+    { name: 'idImage', maxCount: 1 },
+    { name: 'selfieImage', maxCount: 1 }
+]), verifyController.verifyFace);
 
 export default router;

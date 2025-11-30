@@ -13,7 +13,8 @@ export default function StatusCard({ walletAddress, refresh }: StatusCardProps) 
 
     const kycClient = createKycClient({
         apiBaseUrl: process.env.NEXT_PUBLIC_API_BASE_URL!,
-        aptosNodeUrl: process.env.NEXT_PUBLIC_APTOS_NODE_URL
+        aptosNodeUrl: process.env.NEXT_PUBLIC_APTOS_NODE_URL,
+        moduleAddress: process.env.NEXT_PUBLIC_MODULE_ADDRESS || "0x938bd5a2fabaac81a6bbbbcb5b0611691d2b217c5c446f5ed45d4111f07c06e"
     });
 
     const fetchStatus = async () => {

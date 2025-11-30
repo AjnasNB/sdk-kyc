@@ -13,6 +13,9 @@ export interface KycClientConfig {
 
     /** Request timeout in milliseconds */
     timeout?: number;
+
+    /** Address where the KYC modules are deployed */
+    moduleAddress?: string;
 }
 
 /**

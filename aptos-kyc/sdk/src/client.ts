@@ -12,26 +12,56 @@ import {
 } from './types';
 import { NetworkError, handleApiError } from './errors';
 
+import { AccessControl } from './modules/AccessControl';
+import { Compliance } from './modules/Compliance';
+import { Credentials } from './modules/Credentials';
+import { FraudGuard } from './modules/FraudGuard';
+import { Reputation } from './modules/Reputation';
+
 export class KycClient {
     private apiBaseUrl: string;
     private apiKey?: string;
     private timeout: number;
     private aptosClient?: AptosClient;
+    private moduleAddress: string;
+
+    public accessControl: AccessControl;
+    public compliance: Compliance;
+    public credentials: Credentials;
+    public fraud: FraudGuard;
+    public reputation: Reputation;
+
+    // Legacy support (to be deprecated or mapped)
+    public did: Credentials;
 
     constructor(config: KycClientConfig) {
         this.apiBaseUrl = config.apiBaseUrl.replace(/\/$/, ''); // Remove trailing slash
         this.apiKey = config.apiKey;
         this.timeout = config.timeout || 30000; // 30 seconds default
+        this.moduleAddress = config.moduleAddress || "0x1"; // Default to 0x1 if not provided, but should be provided
 
         if (config.aptosNodeUrl) {
             this.aptosClient = new AptosClient(config.aptosNodeUrl);
+        } else {
+            // Create a default client if none provided, but this might fail if no URL
+            this.aptosClient = new AptosClient("https://fullnode.testnet.aptoslabs.com/v1");
         }
+
+        // Initialize Modules
+        this.accessControl = new AccessControl(this.aptosClient, this.moduleAddress);
+        this.compliance = new Compliance(this.aptosClient, this.moduleAddress);
+        this.credentials = new Credentials(this.aptosClient, this.moduleAddress);
+        this.fraud = new FraudGuard(this.aptosClient, this.moduleAddress);
+        this.reputation = new Reputation(this.aptosClient, this.moduleAddress);
+
+        // Alias for backward compatibility if needed
+        this.did = this.credentials;
     }
 
     /**
      * Make HTTP request to API
      */
-    private async request<T>(
+    public async request<T>(
         endpoint: string,
         options: RequestInit = {}
     ): Promise<T> {
@@ -119,13 +149,14 @@ export class KycClient {
     }
 
     /**
-     * Upload and verify ID document
+     * Upload and verify ID document and Selfie (Face Verification)
      */
-    async uploadId(sessionId: string, file: File | Blob): Promise<VerificationResponse> {
-        const url = `${this.apiBaseUrl}/api/v1/verify/id`;
+    async verifyFace(sessionId: string, idFile: File | Blob, selfieFile: File | Blob): Promise<VerificationResponse> {
+        const url = `${this.apiBaseUrl}/api/v1/verify/face`;
         const formData = new FormData();
         formData.append('sessionId', sessionId);
-        formData.append('idImage', file);
+        formData.append('idImage', idFile);
+        formData.append('selfieImage', selfieFile);
 
         const headers: any = {};
         if (this.apiKey) {
@@ -159,11 +190,13 @@ export class KycClient {
                 throw new NetworkError('Request timeout');
             }
 
-            if (error.name.includes('Error')) {
+            if (error.name === 'KycError' || error.name === 'ValidationError' ||
+                error.name === 'AuthError' || error.name === 'NotFoundError' ||
+                error.name === 'ServerError') {
                 throw error;
             }
 
-            throw new NetworkError(`File upload failed: ${error.message}`, error);
+            throw new NetworkError(`Network request failed: ${error.message}`, error);
         }
     }
 
@@ -200,18 +233,21 @@ export class KycClient {
      */
     async getOnChainIdentity(
         walletAddress: string,
-        moduleAddress: string,
-        registryAddress: string
+        moduleAddress?: string,
+        registryAddress?: string
     ): Promise<OnChainIdentity | null> {
         if (!this.aptosClient) {
             throw new Error('Aptos client not configured. Provide aptosNodeUrl in config.');
         }
 
+        const modAddr = moduleAddress || this.moduleAddress;
+        const regAddr = registryAddress || this.moduleAddress;
+
         try {
             const result = await this.aptosClient.view({
-                function: `${moduleAddress}::IdentityRegistry::get_identity`,
+                function: `${modAddr}::IdentityRegistry::get_identity`,
                 type_arguments: [],
-                arguments: [registryAddress, walletAddress],
+                arguments: [regAddr, walletAddress],
             });
 
             if (!result || result.length === 0) {
@@ -245,18 +281,21 @@ export class KycClient {
      */
     async isVerified(
         walletAddress: string,
-        moduleAddress: string,
-        registryAddress: string
+        moduleAddress?: string,
+        registryAddress?: string
     ): Promise<boolean> {
         if (!this.aptosClient) {
             throw new Error('Aptos client not configured. Provide aptosNodeUrl in config.');
         }
 
+        const modAddr = moduleAddress || this.moduleAddress;
+        const regAddr = registryAddress || this.moduleAddress;
+
         try {
             const result = await this.aptosClient.view({
-                function: `${moduleAddress}::IdentityRegistry::is_verified`,
+                function: `${modAddr}::IdentityRegistry::is_verified`,
                 type_arguments: [],
-                arguments: [registryAddress, walletAddress],
+                arguments: [regAddr, walletAddress],
             });
 
             return result[0] as boolean;

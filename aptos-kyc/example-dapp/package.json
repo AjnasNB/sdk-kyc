@@ -11,11 +11,13 @@
         "clean": "rm -rf .next node_modules"
     },
     "dependencies": {
-        "@cognifyr/aptos-kyc-sdk": "file:../sdk",
+        "@cognifyr/aptos-kyc-sdk": "file:../sdk/cognifyr-aptos-kyc-sdk-1.0.0.tgz",
         "aptos": "^1.12.0",
         "next": "^14.0.4",
+        "qrcode.react": "^4.2.0",
         "react": "^18.2.0",
-        "react-dom": "^18.2.0"
+        "react-dom": "^18.2.0",
+        "react-webcam": "^7.2.0"
     },
     "devDependencies": {
         "@types/node": "^20.10.5",

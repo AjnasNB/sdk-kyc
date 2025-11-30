@@ -76,6 +76,9 @@ export async function fullKycFaceMatch(idImageBuffer: Buffer, selfieBuffer: Buff
     let selfiePath = '';
 
     try {
+        console.log(`[DeepFace] Received ID Buffer: ${idImageBuffer.length} bytes`);
+        console.log(`[DeepFace] Received Selfie Buffer: ${selfieBuffer.length} bytes`);
+
         // 1. Save buffers to temp files
         idPath = await saveTempFile(idImageBuffer);
         selfiePath = await saveTempFile(selfieBuffer);

@@ -1,54 +1,76 @@
 # Aptos KYC/Identity SDK
 
-A complete, production-ready identity and KYC infrastructure for the Aptos blockchain, enabling dApps to integrate user verification seamlessly.
+![Aptos KYC Logo](example-dapp/public/logo.png)
 
-## 🌟 Features
+> **The Trust Layer for the World's Fastest Blockchain.**
 
-- **Smart Contracts (Move)**: Identity registry, configuration, and soulbound NFTs
-- **Backend Service**: REST API for verification orchestration with PostgreSQL
-- **Zero-Knowledge Proofs**: Privacy-preserving credential verification using Circom
-- **TypeScript SDK**: Easy integration for any Aptos dApp
-- **Sample dApp**: Complete Next.js demo with wallet integration
-- **Documentation**: Comprehensive Docusaurus site
+A complete, production-ready identity and KYC infrastructure for the Aptos blockchain. This SDK enables dApps to integrate user verification, compliance checks, and on-chain reputation seamlessly, ensuring that speed never compromises security.
+
+---
+
+## ⚡ Why Super Fast Aptos Needs Trust Too
+
+Aptos is engineered for unparalleled speed and scalability, processing thousands of transactions per second with sub-second latency. It is the Formula 1 of blockchains.
+
+**But speed without control is dangerous.**
+
+As the Aptos ecosystem expands into **DeFi**, **Real World Assets (RWA)**, and **Institutional Finance**, the need for reliable, compliant, and privacy-preserving identity verification becomes critical. You cannot build a mortgage platform, a compliant exchange, or a reputation-based DAO without knowing *who* is behind the address.
+
+**This SDK bridges the gap.** It ensures that while your transactions move at the speed of light, they remain anchored in trust. We provide the guardrails that allow institutions and users to transact with confidence, unlocking the next trillion dollars of value on Aptos.
+
+---
+
+## 🌟 Key Features
+
+### 🛡️ Super SDK Modules
+We've modularized identity into powerful, composable building blocks:
+
+- **🔐 AccessControl**: Granular permissioning for your dApp. Gate access based on KYC status, holdings, or custom logic.
+- **⚖️ Compliance**: Automated regulatory checks. Ensure users meet age, region, and AML requirements before they transact.
+- **🪪 Credentials**: W3C-compatible Verifiable Credentials (DID). Issue and verify portable identity proofs.
+- **🚨 FraudGuard**: Real-time risk scoring. Detect and block suspicious wallets using on-chain behavioral analysis.
+- **⭐ Reputation**: On-chain trust scores. Reward good actors and build a web of trust.
+
+### 🧠 Local DeepFace Verification (New!)
+Privacy is paramount. We've replaced external dependencies with a **100% Local AI** solution:
+- **Privacy-First**: Biometric data never leaves your server.
+- **Cost-Effective**: Zero API fees. No Azure/AWS bills.
+- **Powered by DeepFace**: Uses the state-of-the-art **Facenet** model for high-accuracy face matching.
+- **Liveness Detection**: Enforced webcam capture prevents spoofing with static images.
+
+---
 
 ## 🏗️ Architecture
 
-```
-┌─────────────┐         ┌──────────────┐         ┌───────────────┐
-│   dApp UI   │────────▶│  TypeScript  │────────▶│    Backend    │
-│  (Next.js)  │         │     SDK      │         │   API Server  │
-└─────────────┘         └──────────────┘         └───────┬───────┘
-                                                          │
-                        ┌─────────────────────────────────┼────────┐
-                        │                                 │        │
-                        ▼                                 ▼        ▼
-                ┌───────────────┐              ┌──────────────┐  ┌────┐
-                │ Aptos Network │              │  PostgreSQL  │  │ ZK │
-                │ (Move Modules)│              │   Database   │  │Proof│
-                └───────────────┘              └──────────────┘  └────┘
+```mermaid
+graph TD
+    User[User] -->|Webcam Selfie| UI[dApp UI (Next.js)]
+    UI -->|Upload Images| API[Backend API (Node.js)]
+    API -->|Local DeepFace| Python[Python Verification Script]
+    Python -->|Result| API
+    API -->|Store Hash| DB[(PostgreSQL)]
+    API -->|Submit Proof| Chain[Aptos Blockchain]
+    
+    subgraph On-Chain Modules
+        Registry[Identity Registry]
+        Access[Access Control]
+        Rep[Reputation Store]
+    end
+    
+    Chain <--> Registry
+    Chain <--> Access
+    Chain <--> Rep
 ```
 
-## 📦 Monorepo Structure
-
-```
-aptos-kyc/
-├── contracts/          # Move smart contracts
-├── backend/            # Node.js API service
-├── sdk/                # TypeScript SDK
-├── example-dapp/       # Next.js demo application
-├── docs/               # Docusaurus documentation
-└── package.json        # Workspace root
-```
+---
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-
 - Node.js >= 18.0.0
-- npm >= 9.0.0
-- PostgreSQL >= 14
-- Aptos CLI >= 2.0.0
-- Circom >= 2.1.0 (for ZK circuits)
+- Python 3.10+ (for DeepFace)
+- PostgreSQL
+- Aptos CLI
 
 ### Installation
 
@@ -58,224 +80,76 @@ aptos-kyc/
    cd aptos-kyc
    ```
 
-2. **Install dependencies**
+2. **Install Dependencies**
    ```bash
    npm run install:all
    ```
 
-3. **Set up environment variables**
-   
-   Backend (`backend/.env`):
-   ```env
-   # Database
-   DATABASE_URL="postgresql://user:password@localhost:5432/aptos_kyc"
-   
-   # Aptos Configuration
-   APTOS_NODE_URL="https://fullnode.testnet.aptoslabs.com/v1"
-   APTOS_FAUCET_URL="https://faucet.testnet.aptoslabs.com"
-   APTOS_ISSUER_PRIVATE_KEY="0x..." # Your issuer account private key
-   APTOS_MODULE_ADDRESS="0x..." # Deployed module address
-   
-   # Server
-   PORT=3001
-   NODE_ENV=development
-   
-   # Security
-   JWT_SECRET="your-secret-key-here"
-   API_KEY_ENABLED=false
-   ```
-
-4. **Deploy Move contracts**
-   ```bash
-   cd contracts
-   aptos init  # Configure your Aptos profile
-   aptos move compile
-   aptos move publish --profile default
-   cd ..
-   ```
-
-5. **Set up database**
+3. **Setup Python Environment (for DeepFace)**
    ```bash
    cd backend
-   npx prisma migrate dev --name init
-   npx prisma generate
-   cd ..
+   pip install deepface tf-keras opencv-python
+   # The first run will automatically download the Facenet model weights (~90MB)
    ```
 
-6. **Build ZK circuits** (optional for MVP)
+4. **Configure Environment**
+   Update `backend/.env` with your database and Aptos settings.
+
+5. **Run the Stack**
    ```bash
+   # Terminal 1: Backend
    cd backend
-   npm run zk:setup
-   cd ..
+   npm run dev
+
+   # Terminal 2: Frontend
+   cd example-dapp
+   npm run dev
    ```
 
-7. **Build all packages**
-   ```bash
-   npm run build
-   ```
-
-### Running Locally
-
-**Backend API:**
-```bash
-npm run dev:backend
-# Server runs on http://localhost:3001
-```
-
-**Example dApp:**
-```bash
-npm run dev:dapp
-# dApp runs on http://localhost:3000
-```
-
-**Documentation:**
-```bash
-npm run dev:docs
-# Docs run on http://localhost:3002
-```
-
-## 📚 Documentation
-
-Visit the full documentation at [docs/](./docs/) or run the docs server:
-
-- [Introduction](./docs/docs/intro.md)
-- [Architecture](./docs/docs/architecture.md)
-- [Smart Contracts](./docs/docs/contracts.md)
-- [Backend API](./docs/docs/backend-api.md)
-- [SDK Usage](./docs/docs/sdk.md)
-- [Quickstart Guide](./docs/docs/quickstart.md)
-- [Security](./docs/docs/security.md)
-- [Deployment](./docs/docs/deployment.md)
-
-## 🔧 Development
-
-### Smart Contracts
-
-```bash
-cd contracts
-aptos move compile
-aptos move test
-```
-
-### Backend
-
-```bash
-cd backend
-npm run dev          # Run dev server with hot reload
-npm run build        # Build TypeScript
-npm run test         # Run tests
-npm run prisma:studio # Open Prisma Studio
-```
-
-### SDK
-
-```bash
-cd sdk
-npm run build        # Build SDK
-npm run test         # Run tests
-```
-
-### Example dApp
-
-```bash
-cd example-dapp
-npm run dev          # Run Next.js dev server
-npm run build        # Build for production
-```
-
-## 🧪 Testing
-
-Run all tests across workspaces:
-```bash
-npm run test
-```
+---
 
 ## 📖 SDK Usage
+
+The SDK is designed for developer happiness. Integrating identity is as simple as a few lines of code.
 
 ```typescript
 import { createKycClient } from '@cognifyr/aptos-kyc-sdk';
 
-const kyc = createKycClient({
-  apiBaseUrl: 'https://api.kyc.example.com',
-  aptosNodeUrl: 'https://fullnode.testnet.aptoslabs.com/v1'
+const client = createKycClient({
+  apiBaseUrl: 'http://localhost:3001/api/v1',
+  aptosNodeUrl: 'https://fullnode.testnet.aptoslabs.com/v1',
+  moduleAddress: '0x...' // Your deployed contract address
 });
 
-// Start KYC session
-const { sessionId } = await kyc.startSession(walletAddress);
+// 1. Check Reputation
+const score = await client.reputation.getScore(userAddress);
+if (score < 50) throw new Error("Reputation too low");
 
-// Verify email
-await kyc.verifyEmail(sessionId, 'user@example.com');
+// 2. Verify Identity (Webcam Flow)
+await client.verifyFace(sessionId, idFile, selfieFile);
 
-// Verify phone
-await kyc.verifyPhone(sessionId, '+1234567890');
-
-// Upload ID document
-await kyc.uploadId(sessionId, idFile);
-
-// Complete KYC (writes to blockchain)
-const { txHash, kycLevel } = await kyc.completeKyc(sessionId);
-
-// Check status
-const status = await kyc.getStatus(walletAddress);
+// 3. Check Compliance
+const isCompliant = await client.compliance.checkCompliance(userAddress, ['US_RESTRICTED']);
 ```
 
-## 🔐 Security
+---
 
-- **Trusted Issuer Model**: Only authorized issuer can submit KYC data
-- **PII Protection**: Stores only hashes, not raw documents
-- **API Key Authentication**: Rate limiting and access control
-- **ZK Proofs**: Privacy-preserving verification options
-- **Soulbound NFTs**: Non-transferable identity tokens
+## 📦 Monorepo Structure
 
-See [Security Documentation](./docs/docs/security.md) for details.
+- **`contracts/`**: Move smart contracts (The Trust Anchor).
+- **`backend/`**: Node.js API + Python DeepFace Script (The Brain).
+- **`sdk/`**: TypeScript Client (The Bridge).
+- **`example-dapp/`**: Reference Implementation (The Demo).
 
-## 🚢 Deployment
-
-### Contracts
-```bash
-cd contracts
-aptos move publish --profile mainnet
-```
-
-### Backend (Railway/Render)
-```bash
-cd backend
-# Set environment variables in platform
-# Deploy via GitHub integration or CLI
-```
-
-### SDK (npm)
-```bash
-cd sdk
-npm publish --access public
-```
-
-### dApp (Vercel)
-```bash
-cd example-dapp
-vercel deploy --prod
-```
-
-See [Deployment Guide](./docs/docs/deployment.md) for detailed instructions.
+---
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please read our contributing guidelines and code of conduct.
+We are building the standard for identity on Aptos. Contributions are welcome!
+Please read our [Contributing Guide](CONTRIBUTING.md) and join our [Discord](https://discord.gg/aptos-kyc).
+
+---
 
 ## 📄 License
 
 MIT © Cognifyr
-
-## 🔗 Links
-
-- [Aptos Documentation](https://aptos.dev)
-- [Move Language](https://move-language.github.io/move/)
-- [Circom](https://docs.circom.io/)
-- [snarkjs](https://github.com/iden3/snarkjs)
-
-## 💬 Support
-
-For issues and questions:
-- GitHub Issues: [github.com/cognifyr/aptos-kyc/issues](https://github.com/cognifyr/aptos-kyc/issues)
-- Discord: [Join our community](https://discord.gg/aptos-kyc)
-- Email: support@cognifyr.com

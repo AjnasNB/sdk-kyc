@@ -88,17 +88,18 @@ export async function fullKycFaceMatch(idImageBuffer: Buffer, selfieBuffer: Buff
         console.log("DeepFace Result:", result);
 
         // 3. Interpret result
-        return {
-            verified: result.verified,
-            confidence: 1 - result.distance,
-            debug: {
-                distance: result.distance,
-                threshold: result.threshold,
-                model: result.model,
-                metric: result.similarity_metric,
-                time: new Date().toISOString()
-            }
-        };
+        if (result.verified) {
+            return {
+                verified: true,
+                confidence: 1 - result.distance // Approximation
+            };
+        } else {
+            return {
+                verified: false,
+                reason: "Face mismatch",
+                confidence: 1 - result.distance
+            };
+        }
 
     } catch (error: any) {
         console.error("DeepFace Verification Failed:", error);

@@ -4,13 +4,11 @@ interface WalletConnectProps {
     walletAddress: string | null;
     onConnect: (address: string) => void;
     onDisconnect: () => void;
-    sessionId?: string | null;
 }
 
-export default function WalletConnect({ walletAddress, onConnect, onDisconnect, sessionId }: WalletConnectProps) {
+export default function WalletConnect({ walletAddress, onConnect, onDisconnect }: WalletConnectProps) {
     const [connecting, setConnecting] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [showSessionModal, setShowSessionModal] = useState(false);
 
     const connectWallet = async () => {
         setConnecting(true);
@@ -54,85 +52,57 @@ export default function WalletConnect({ walletAddress, onConnect, onDisconnect, 
 
     if (walletAddress) {
         return (
-            <>
-                <div className="flex items-center gap-4">
-                    {sessionId && (
-                        <button
-                            onClick={() => setShowSessionModal(true)}
-                            className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-green-500/10 text-green-400 rounded-lg text-xs border border-green-500/20 hover:bg-green-500/20 transition"
-                        >
-                            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                            Session Active
-                        </button>
-                    )}
-
-                    <div className="flex items-center gap-3 bg-white/5 px-4 py-2 rounded-full border border-white/10">
-                        <div className="w-2 h-2 rounded-full bg-green-400"></div>
-                        <span className="font-mono text-sm text-gray-300">
+            <div className="bg-white rounded-lg shadow-xl p-6">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <p className="text-sm text-gray-600 mb-1">Connected Wallet</p>
+                        <p className="font-mono text-sm bg-gray-100 px-3 py-2 rounded">
                             {walletAddress.substring(0, 6)}...{walletAddress.substring(walletAddress.length - 4)}
-                        </span>
+                        </p>
                     </div>
-
                     <button
                         onClick={handleDisconnect}
-                        className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full transition"
-                        title="Disconnect"
+                        className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
                     >
-                        ✕
+                        Disconnect
                     </button>
                 </div>
-
-                {/* Session Modal */}
-                {showSessionModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-                        <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
-                            <div className="p-6 border-b border-gray-800 flex justify-between items-center">
-                                <h3 className="text-xl font-bold text-white">Session Overview</h3>
-                                <button onClick={() => setShowSessionModal(false)} className="text-gray-400 hover:text-white">✕</button>
-                            </div>
-                            <div className="p-6 space-y-4">
-                                <div>
-                                    <label className="text-xs text-gray-500 uppercase font-semibold">Session ID</label>
-                                    <div className="font-mono text-sm text-blue-400 bg-blue-900/20 p-3 rounded mt-1 break-all border border-blue-900/30">
-                                        {sessionId}
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="text-xs text-gray-500 uppercase font-semibold">Backend Connection</label>
-                                    <div className="flex items-center gap-2 mt-1">
-                                        <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                                        <span className="text-gray-300 text-sm">Connected to API v1</span>
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="text-xs text-gray-500 uppercase font-semibold">Security</label>
-                                    <div className="flex items-center gap-2 mt-1">
-                                        <span className="text-purple-400 text-sm">🔒 TLS Encrypted</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="p-4 bg-gray-800/50 text-center">
-                                <button
-                                    onClick={() => setShowSessionModal(false)}
-                                    className="text-sm text-gray-400 hover:text-white"
-                                >
-                                    Close
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-            </>
+            </div>
         );
     }
 
     return (
-        <button
-            onClick={connectWallet}
-            disabled={connecting}
-            className="glass-button px-6 py-2 rounded-full text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 shadow-lg shadow-purple-500/20"
-        >
-            {connecting ? 'Connecting...' : 'Connect Wallet'}
-        </button>
+        <div className="bg-white rounded-lg shadow-xl p-8 text-center">
+            <h2 className="text-2xl font-bold mb-4">Connect Your Wallet</h2>
+            <p className="text-gray-600 mb-6">
+                Connect your Petra wallet to start the KYC process
+            </p>
+
+            <button
+                onClick={connectWallet}
+                disabled={connecting}
+                className="px-8 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg font-semibold hover:from-purple-700 hover:to-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+                {connecting ? 'Connecting...' : 'Connect Petra Wallet'}
+            </button>
+
+            {error && (
+                <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <p className="text-red-600 text-sm">{error}</p>
+                </div>
+            )}
+
+            <div className="mt-6 text-sm text-gray-500">
+                Don't have Petra wallet?{' '}
+                <a
+                    href="https://petra.app/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-purple-600 hover:text-purple-700"
+                >
+                    Install here
+                </a>
+            </div>
+        </div>
     );
 }

@@ -60,6 +60,25 @@ npm install @cognifyr/aptos-kyc-sdk
 
 ---
 
+## 🔗 Deployed Contracts (Aptos Testnet)
+
+The core infrastructure is deployed and live on the Aptos Testnet.
+
+| Contract | Address |
+|----------|---------|
+| **Module Address** | `0x938bd5a2fabaac81a6bbbbcb5b0611691d2b217c5c446f5ed45d4111f07c06e` |
+| **Identity Registry** | `...::IdentityRegistry` |
+| **Access Control** | `...::AccessControl` |
+| **Compliance** | `...::ComplianceEngine` |
+| **Fraud Guard** | `...::FraudGuard` |
+| **Reputation** | `...::ReputationStore` |
+
+[View on Aptos Explorer ↗](https://explorer.aptoslabs.com/account/0x938bd5a2fabaac81a6bbbbcb5b0611691d2b217c5c446f5ed45d4111f07c06e/modules?network=testnet)
+
+---
+
+---
+
 ## 🚀 Quick Start
 
 Initialize the client with your backend URL and Aptos node connection.
